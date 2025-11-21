@@ -4,6 +4,8 @@
   "description": "n8n node for GeminiGen AI video generation",
   "keywords": [
     "n8n-community-node-package",
+    "n8n-community-node",
+    "n8n-nodes",
     "n8n",
     "geminigen",
     "ai",

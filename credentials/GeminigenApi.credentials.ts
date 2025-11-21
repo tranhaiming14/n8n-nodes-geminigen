@@ -8,7 +8,7 @@ import {
 export class GeminigenApi implements ICredentialType {
     name = 'GeminigenApi';
     displayName = 'Geminigen API';
-    documentationUrl = 'https://geminigen.ai/docs';
+    documentationUrl = 'https://docs.geminigen.ai/';
     properties: INodeProperties[] = [
         {
             displayName: 'API Key',

@@ -23,7 +23,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 1. Go to **Settings > Community Nodes**
 2. Select **Install**
-3. Enter `n8n-nodes-geminigen` in **Enter npm package name**
+3. Enter `n8n-nodes-geminigen`
 4. Agree to the risks of using community nodes
 5. Select **Install**
 
@@ -79,7 +79,7 @@ In order to get the api key needed to use this node, you should visit https://ge
 
 1. **Trigger**: Use a Schedule Trigger to run daily
 2. **GeminiGen Node**: Configure with your prompt and preferred model
-3. **Output**: Connect to email or storage nodes to save/send the generated video
+3. **Output**: The generated video URL will be returned after generation is complete, please be patient since the video generation can take a few minutes.
 
 ### Tips
 

@@ -102,7 +102,7 @@ export class Geminigen implements INodeType {
                         'GeminigenApi',
                         {
                             method: 'POST',
-                            url: `https://api.Geminigen.ai/uapi/v1/video-gen/${endpoint}`,
+                            url: `https://api.geminigen.ai/uapi/v1/video-gen/${endpoint}`,
                             headers: {
                                 'Content-Type': 'multipart/form-data',
                             },
@@ -116,7 +116,7 @@ export class Geminigen implements INodeType {
 
                     // Step 2: Poll for completion
                     const pollInterval = 10 * 1000; // 10 seconds
-                    const maxWaitTime = 5 * 60 * 1000; // 30 minutes
+                    const maxWaitTime = 30 * 60 * 1000; 
                     const startTime = Date.now();
 
                     let videoReady = false;
@@ -127,7 +127,7 @@ export class Geminigen implements INodeType {
                         if (Date.now() - startTime > maxWaitTime) {
                             throw new NodeOperationError(
                                 this.getNode(),
-                                'Video generation timed out after 5 minutes. Please try again later',
+                                'Video generation timed out after 30 minutes. Please try again later',
                                 { itemIndex: i },
                             );
                         }
@@ -141,7 +141,7 @@ export class Geminigen implements INodeType {
                             'GeminigenApi',
                             {
                                 method: 'GET',
-                                url: 'https://api.Geminigen.ai/uapi/v1/histories',
+                                url: 'https://api.geminigen.ai/uapi/v1/histories',
                                 qs: {
                                     filter_by: 'all',
                                     items_per_page: 10,
@@ -165,7 +165,7 @@ export class Geminigen implements INodeType {
                                 'GeminigenApi',
                                 {
                                     method: 'GET',
-                                    url: `https://api.Geminigen.ai/uapi/v1/history/${uuid}`,
+                                    url: `https://api.geminigen.ai/uapi/v1/history/${uuid}`,
                                     headers: {
                                         'accept': 'application/json',
                                     },
