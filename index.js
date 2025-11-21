@@ -1,0 +1,3 @@
+// This file is required by n8n to load the community node package
+// It exports nothing as the actual node definitions are specified in package.json
+module.exports = {};
