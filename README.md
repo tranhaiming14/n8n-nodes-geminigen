@@ -19,13 +19,12 @@ The GeminiGen.AI Video Generation API allows you to create high-quality videos f
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-### Community Nodes (Recommended)
+### Community Nodes 
 
 1. Go to **Settings > Community Nodes**
 2. Select **Install**
 3. Enter `n8n-nodes-geminigen` in **Enter npm package name**
-4. Agree to the risks of using community nodes
-5. Select **Install**
+4. Select **Install**
 
 ### Manual Installation
 
@@ -47,7 +46,6 @@ Generate Video
 ## Credentials
 
 In order to get the api key needed to use this node, you should visit https://geminigen.ai to sign up, click on your profile then API to generate the api key
-## Compatibility
 
 ## Compatibility
 
