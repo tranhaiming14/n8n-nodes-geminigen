@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-geminigen",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "n8n node for GeminiGen AI video generation",
   "keywords": [
     "n8n-community-node-package",
@@ -11,7 +11,7 @@
     "ai",
     "sora",
     "veo",
-    "AI",  
+    "AI",
     "video generation"
   ],
   "license": "MIT",
@@ -38,6 +38,9 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/GeminigenApi.credentials.js"
+    ],
     "nodes": [
       "dist/nodes/Geminigen/Geminigen.node.js"
     ]
@@ -54,5 +57,8 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "n8n-nodes-geminigen": "^1.0.0"
   }
 }

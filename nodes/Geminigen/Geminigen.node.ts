@@ -4,6 +4,7 @@ import {
     INodeType,
     INodeTypeDescription,
     NodeOperationError,
+    sleep,
 } from 'n8n-workflow';
 
 export class Geminigen implements INodeType {
@@ -21,6 +22,12 @@ export class Geminigen implements INodeType {
         },
         inputs: ['main'],
         outputs: ['main'],
+        credentials: [
+            {
+                name: 'GeminigenApi',
+                required: true,
+            },
+        ],
         properties: [
             {
                 displayName: 'Operation',
@@ -36,19 +43,6 @@ export class Geminigen implements INodeType {
                     },
                 ],
                 default: 'generateVideo',
-            },
-            {
-                displayName: 'API Key',
-                name: 'apiKey',
-                type: 'string',
-                typeOptions: {
-                    password: true,
-                },
-                default: '',
-                required: true,
-                description: 'Your Geminigen API key from https://geminigen.ai. Follow the guide to get your API key: https://docs.geminigen.ai/getting-started/authentication',
-                hint: 'Follow the guide to get your API key: https://docs.geminigen.ai/getting-started/authentication',
-
             },
             {
                 displayName: 'Prompt',
@@ -125,25 +119,27 @@ export class Geminigen implements INodeType {
                     const prompt = this.getNodeParameter('prompt', i) as string;
                     const model = this.getNodeParameter('model', i) as string;
                     const duration = this.getNodeParameter('duration', i) as string;
-                    const apiKey = this.getNodeParameter('apiKey', i) as string;
 
                     const endpoint = model.includes('sora') ? 'sora' : 'veo';
 
                     // Step 1: Submit video generation request
-                    await this.helpers.httpRequest({
-                        method: 'POST',
-                        url: `https://api.geminigen.ai/uapi/v1/video-gen/${endpoint}`,
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            'x-api-key': apiKey,
+                    await this.helpers.httpRequestWithAuthentication.call(
+                        this,
+                        'GeminigenApi',
+                        {
+                            method: 'POST',
+                            url: `https://api.geminigen.ai/uapi/v1/video-gen/${endpoint}`,
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                            },
+                            body: {
+                                "prompt": prompt,
+                                "model": model,
+                                "duration": duration,
+                            },
+                            json: true,
                         },
-                        body: {
-                            "prompt": prompt,
-                            "model": model,
-                            "duration": duration,
-                        },
-                        json: true,
-                    });
+                    );
 
                     // Step 2: Poll for completion
                     const pollInterval = 10 * 1000; // 10 seconds
@@ -164,23 +160,26 @@ export class Geminigen implements INodeType {
                         }
 
                         // Wait before checking status
-                        await new Promise(resolve => setTimeout(resolve, pollInterval));
+                        await sleep(pollInterval);
 
                         // Check status
-                        const historyResponse = await this.helpers.httpRequest({
-                            method: 'GET',
-                            url: 'https://api.geminigen.ai/uapi/v1/histories',
-                            qs: {
-                                filter_by: 'all',
-                                items_per_page: 10,
-                                page: 1,
+                        const historyResponse = await this.helpers.httpRequestWithAuthentication.call(
+                            this,
+                            'GeminigenApi',
+                            {
+                                method: 'GET',
+                                url: 'https://api.geminigen.ai/uapi/v1/histories',
+                                qs: {
+                                    filter_by: 'all',
+                                    items_per_page: 10,
+                                    page: 1,
+                                },
+                                headers: {
+                                    'accept': 'application/json',
+                                },
+                                json: true,
                             },
-                            headers: {
-                                'accept': 'application/json',
-                                'x-api-key': apiKey,
-                            },
-                            json: true,
-                        });
+                        );
 
                         // Check if video is ready (status === 2)
                         if (historyResponse.result && historyResponse.result[0]?.status === 2) {
@@ -188,15 +187,18 @@ export class Geminigen implements INodeType {
 
                             // Get full video details
                             const uuid = historyResponse.result[0].uuid;
-                            finalResult = await this.helpers.httpRequest({
-                                method: 'GET',
-                                url: `https://api.geminigen.ai/uapi/v1/history/${uuid}`,
-                                headers: {
-                                    'accept': 'application/json',
-                                    'x-api-key': apiKey,
+                            finalResult = await this.helpers.httpRequestWithAuthentication.call(
+                                this,
+                                'GeminigenApi',
+                                {
+                                    method: 'GET',
+                                    url: `https://api.geminigen.ai/uapi/v1/history/${uuid}`,
+                                    headers: {
+                                        'accept': 'application/json',
+                                    },
+                                    json: true,
                                 },
-                                json: true,
-                            });
+                            );
                         }
                     }
 
