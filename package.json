@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-geminigen",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "n8n node for GeminiGen AI video generation",
   "keywords": [
     "n8n-community-node-package",
@@ -57,8 +57,5 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  },
-  "dependencies": {
-    "n8n-nodes-geminigen": "^1.0.0"
   }
 }
