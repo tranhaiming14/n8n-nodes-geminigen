@@ -15,17 +15,12 @@ export class Geminigen implements INodeType {
         version: 1,
         subtitle: '={{$parameter["operation"]}}',
         description: 'Generate AI videos using Geminigen AI Veo API',
+        documentationUrl: 'https://docs.geminigen.ai/getting-started/authentication',
         defaults: {
             name: 'Geminigen AI',
         },
         inputs: ['main'],
         outputs: ['main'],
-        credentials: [
-            {
-                name: 'GeminigenApi',
-                required: true,
-            },
-        ],
         properties: [
             {
                 displayName: 'Operation',
@@ -34,13 +29,26 @@ export class Geminigen implements INodeType {
                 noDataExpression: true,
                 options: [
                     {
-                        name: 'Generate Video',
+                        name: 'Generate Video using Veo and Sora Models',
                         value: 'generateVideo',
-                        description: 'Generate a video from text prompt',
+                        description: 'Generate Video using Veo and Sora Models',
                         action: 'Generate a video',
                     },
                 ],
                 default: 'generateVideo',
+            },
+            {
+                displayName: 'API Key',
+                name: 'apiKey',
+                type: 'string',
+                typeOptions: {
+                    password: true,
+                },
+                default: '',
+                required: true,
+                description: 'Your Geminigen API key from https://geminigen.ai. Follow the guide to get your API key: https://docs.geminigen.ai/getting-started/authentication',
+                hint: 'Follow the guide to get your API key: https://docs.geminigen.ai/getting-started/authentication',
+
             },
             {
                 displayName: 'Prompt',
@@ -80,6 +88,29 @@ export class Geminigen implements INodeType {
                 required: true,
                 description: 'The video generation model to use',
             },
+            {
+                displayName: 'Duration',
+                name: 'duration',
+                type: 'options',
+                options: [
+                    {
+                        name: '8 seconds',
+                        value: '8',
+                    },
+                    {
+                        name: '10 seconds',
+                        value: '10',
+                    },
+                    {
+                        name: '15 seconds',
+                        value: '15',
+                    },
+                ],
+                default: '8',
+                required: true,
+                description: 'Video duration in seconds',
+                hint: 'Note: Veo models only support 8 seconds. 10 and 15 seconds are only available for Sora models.',
+            },
         ],
     };
 
@@ -93,26 +124,26 @@ export class Geminigen implements INodeType {
                 if (operation === 'generateVideo') {
                     const prompt = this.getNodeParameter('prompt', i) as string;
                     const model = this.getNodeParameter('model', i) as string;
+                    const duration = this.getNodeParameter('duration', i) as string;
+                    const apiKey = this.getNodeParameter('apiKey', i) as string;
 
                     const endpoint = model.includes('sora') ? 'sora' : 'veo';
 
                     // Step 1: Submit video generation request
-                    await this.helpers.httpRequestWithAuthentication.call(
-                        this,
-                        'GeminigenApi',
-                        {
-                            method: 'POST',
-                            url: `https://api.geminigen.ai/uapi/v1/video-gen/${endpoint}`,
-                            headers: {
-                                'Content-Type': 'multipart/form-data',
-                            },
-                            body: {
-                                "prompt": prompt,
-                                "model": model,
-                            },
-                            json: true,
+                    await this.helpers.httpRequest({
+                        method: 'POST',
+                        url: `https://api.geminigen.ai/uapi/v1/video-gen/${endpoint}`,
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'x-api-key': apiKey,
                         },
-                    );
+                        body: {
+                            "prompt": prompt,
+                            "model": model,
+                            "duration": duration,
+                        },
+                        json: true,
+                    });
 
                     // Step 2: Poll for completion
                     const pollInterval = 10 * 1000; // 10 seconds
@@ -136,23 +167,20 @@ export class Geminigen implements INodeType {
                         await new Promise(resolve => setTimeout(resolve, pollInterval));
 
                         // Check status
-                        const historyResponse = await this.helpers.httpRequestWithAuthentication.call(
-                            this,
-                            'GeminigenApi',
-                            {
-                                method: 'GET',
-                                url: 'https://api.geminigen.ai/uapi/v1/histories',
-                                qs: {
-                                    filter_by: 'all',
-                                    items_per_page: 10,
-                                    page: 1,
-                                },
-                                headers: {
-                                    'accept': 'application/json',
-                                },
-                                json: true,
+                        const historyResponse = await this.helpers.httpRequest({
+                            method: 'GET',
+                            url: 'https://api.geminigen.ai/uapi/v1/histories',
+                            qs: {
+                                filter_by: 'all',
+                                items_per_page: 10,
+                                page: 1,
                             },
-                        );
+                            headers: {
+                                'accept': 'application/json',
+                                'x-api-key': apiKey,
+                            },
+                            json: true,
+                        });
 
                         // Check if video is ready (status === 2)
                         if (historyResponse.result && historyResponse.result[0]?.status === 2) {
@@ -160,18 +188,15 @@ export class Geminigen implements INodeType {
 
                             // Get full video details
                             const uuid = historyResponse.result[0].uuid;
-                            finalResult = await this.helpers.httpRequestWithAuthentication.call(
-                                this,
-                                'GeminigenApi',
-                                {
-                                    method: 'GET',
-                                    url: `https://api.geminigen.ai/uapi/v1/history/${uuid}`,
-                                    headers: {
-                                        'accept': 'application/json',
-                                    },
-                                    json: true,
+                            finalResult = await this.helpers.httpRequest({
+                                method: 'GET',
+                                url: `https://api.geminigen.ai/uapi/v1/history/${uuid}`,
+                                headers: {
+                                    'accept': 'application/json',
+                                    'x-api-key': apiKey,
                                 },
-                            );
+                                json: true,
+                            });
                         }
                     }
 
@@ -193,6 +218,7 @@ export class Geminigen implements INodeType {
                             thumbnailUrl,
                             prompt,
                             model,
+                            duration,
                             fullResponse: finalResult,
                         },
                         pairedItem: { item: i },

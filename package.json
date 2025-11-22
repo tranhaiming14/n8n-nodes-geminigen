@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-geminigen",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "n8n node for GeminiGen AI video generation",
   "keywords": [
     "n8n-community-node-package",
@@ -9,6 +9,9 @@
     "n8n",
     "geminigen",
     "ai",
+    "sora",
+    "veo",
+    "AI",  
     "video generation"
   ],
   "license": "MIT",
@@ -21,7 +24,6 @@
     "type": "git",
     "url": "git+https://github.com/tranhaiming14/n8n-nodes-geminigen.git"
   },
-  "main": "index.js",
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" dist/",
@@ -36,9 +38,6 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/GeminigenApi.credentials.js"
-    ],
     "nodes": [
       "dist/nodes/Geminigen/Geminigen.node.js"
     ]
