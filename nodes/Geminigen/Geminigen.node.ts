@@ -3,6 +3,7 @@ import {
     INodeExecutionData,
     INodeType,
     INodeTypeDescription,
+    NodeConnectionTypes,
     NodeOperationError,
     sleep,
 } from 'n8n-workflow';
@@ -20,8 +21,8 @@ export class Geminigen implements INodeType {
         defaults: {
             name: 'Geminigen AI',
         },
-        inputs: ['main'],
-        outputs: ['main'],
+        inputs: [NodeConnectionTypes.Main],
+        outputs: [NodeConnectionTypes.Main],
         credentials: [
             {
                 name: 'GeminigenApi',
@@ -30,10 +31,28 @@ export class Geminigen implements INodeType {
         ],
         properties: [
             {
+                displayName: 'Resource',
+                name: 'resource',
+                type: 'options',
+                noDataExpression: true,
+                options: [
+                    {
+                        name: 'Video Generation',
+                        value: 'videoGeneration',
+                    },
+                ],
+                default: 'videoGeneration',
+            },
+            {
                 displayName: 'Operation',
                 name: 'operation',
                 type: 'options',
                 noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resource: ['videoGeneration'],
+                    },
+                },
                 options: [
                     {
                         name: 'Generate Video using Veo and Sora Models',
@@ -99,11 +118,15 @@ export class Geminigen implements INodeType {
                         name: '15 seconds',
                         value: '15',
                     },
+                    {
+                        name: '25 seconds',
+                        value: '25',
+                    }
                 ],
                 default: '8',
                 required: true,
                 description: 'Video duration in seconds',
-                hint: 'Note: Veo models only support 8 seconds. 10 and 15 seconds are only available for Sora models.',
+                hint: 'Note: Veo models only support 8 seconds. 10, 15 seconds are only available for Sora models. Sora 2 Pro supports up to 25 seconds.',
             },
         ],
     };
@@ -143,7 +166,20 @@ export class Geminigen implements INodeType {
 
                     // Step 2: Poll for completion
                     const pollInterval = 10 * 1000; // 10 seconds
-                    const maxWaitTime = 30 * 60 * 1000; 
+
+                    // Set max wait time per model (in milliseconds):
+                    // Veo models: 5 minutes, Sora 2: 10 minutes, Sora 2 Pro: 18 minutes
+                    let maxWaitTime: number;
+                    if (model === 'veo-3' || model === 'veo-3-fast') {
+                        maxWaitTime = 5 * 60 * 1000; // 5 minutes
+                    } else if (model === 'sora-2') {
+                        maxWaitTime = 10 * 60 * 1000; // 10 minutes
+                    } else if (model === 'sora-2-pro') {
+                        maxWaitTime = 18 * 60 * 1000; // 18 minutes
+                    } else {
+                        maxWaitTime = 30 * 60 * 1000; // default 30 minutes
+                    }
+
                     const startTime = Date.now();
 
                     let videoReady = false;
@@ -152,9 +188,10 @@ export class Geminigen implements INodeType {
                     while (!videoReady) {
                         // Check if max wait time exceeded
                         if (Date.now() - startTime > maxWaitTime) {
+                            const minutes = Math.round(maxWaitTime / (60 * 1000));
                             throw new NodeOperationError(
                                 this.getNode(),
-                                'Video generation timed out after 30 minutes. Please try again later',
+                                `Video generation timed out after ${minutes} minute(s) for model ${model}. Please try again later`,
                                 { itemIndex: i },
                             );
                         }
