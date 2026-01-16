@@ -89,6 +89,10 @@ export class Geminigen implements INodeType {
                         value: 'veo-3-fast',
                     },
                     {
+                        name: 'Grok 3',
+                        value: 'grok-3',
+                    },
+                    {
                         name: 'Sora 2',
                         value: 'sora-2',
                     },
@@ -146,6 +150,16 @@ export class Geminigen implements INodeType {
                     const endpoint = model.includes('sora') ? 'sora' : 'veo';
 
                     // Step 1: Submit video generation request
+                    const requestBody: any = {
+                        prompt,
+                        model,
+                    };
+
+                    // Grok 3 only supports a fixed 6-second duration and does not accept a duration parameter
+                    if (model !== 'grok-3') {
+                        requestBody.duration = duration;
+                    }
+
                     await this.helpers.httpRequestWithAuthentication.call(
                         this,
                         'GeminigenApi',
@@ -155,11 +169,7 @@ export class Geminigen implements INodeType {
                             headers: {
                                 'Content-Type': 'multipart/form-data',
                             },
-                            body: {
-                                "prompt": prompt,
-                                "model": model,
-                                "duration": duration,
-                            },
+                            body: requestBody,
                             json: true,
                         },
                     );
@@ -176,6 +186,8 @@ export class Geminigen implements INodeType {
                         maxWaitTime = 10 * 60 * 1000; // 10 minutes
                     } else if (model === 'sora-2-pro') {
                         maxWaitTime = 18 * 60 * 1000; // 18 minutes
+                    } else if (model === 'grok-3') {
+                        maxWaitTime = 5 * 60 * 1000; // 1 minute for grok (short)
                     } else {
                         maxWaitTime = 30 * 60 * 1000; // default 30 minutes
                     }
