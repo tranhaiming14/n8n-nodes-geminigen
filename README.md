@@ -72,6 +72,7 @@ In order to get the api key needed to use this node, you should visit https://ge
 - **Model**: Choose from available AI models:
   - Veo 3, Veo 3 Fast (Google's Veo models)
   - Sora 2, Sora 2 Pro (OpenAI's Sora models)
+  - Grok (xAI's model)
 
 ### Example Workflow
 
