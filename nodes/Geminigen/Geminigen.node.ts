@@ -16,7 +16,7 @@ export class Geminigen implements INodeType {
         group: ['transform'],
         version: 1,
         subtitle: '={{$parameter["operation"]}}',
-        description: 'Generate AI videos using Geminigen AI Veo API',
+        description: 'Generate AI videos using geminigen.ai API',
         documentationUrl: 'https://docs.geminigen.ai/getting-started/authentication',
         defaults: {
             name: 'Geminigen AI',
@@ -55,9 +55,9 @@ export class Geminigen implements INodeType {
                 },
                 options: [
                     {
-                        name: 'Generate Video using Veo and Sora Models',
+                        name: 'Generate Video',
                         value: 'generateVideo',
-                        description: 'Generate Video using Veo and Sora Models',
+                        description: 'Generate Video using AI Models',
                         action: 'Generate a video',
                     },
                 ],
@@ -100,6 +100,14 @@ export class Geminigen implements INodeType {
                         name: 'Sora 2 Pro',
                         value: 'sora-2-pro',
                     },
+                    {
+                        name: 'Seedance 2 Remix',
+                        value: 'seedance-2-remix',
+                    },
+                    {
+                        name: 'Seedance 2 Omni',
+                        value: 'seedance-2-omni',
+                    },
                 ],
                 default: 'veo-3-fast',
                 required: true,
@@ -130,7 +138,7 @@ export class Geminigen implements INodeType {
                 default: '8',
                 required: true,
                 description: 'Video duration in seconds',
-                hint: 'Note: Veo models only support 8 seconds. 10, 15 seconds are only available for Sora models. Sora 2 Pro supports up to 25 seconds.',
+                hint: 'Note: Veo models only support 8 seconds. Sora 2 Pro supports up to 25 seconds.',
             },
         ],
     };
@@ -147,7 +155,16 @@ export class Geminigen implements INodeType {
                     const model = this.getNodeParameter('model', i) as string;
                     const duration = this.getNodeParameter('duration', i) as string;
 
-                    const endpoint = model.includes('sora') ? 'sora' : 'veo';
+                    let endpoint: string;
+                    if (model === 'grok-3') {
+                        endpoint = 'grok';
+                    } else if (model.includes('sora')) {
+                        endpoint = 'sora';
+                    } else if (model.includes('seedance')) {
+                        endpoint = 'seedance';
+                    } else {
+                        endpoint = 'veo';
+                    }
 
                     // Step 1: Submit video generation request
                     const requestBody: any = {
@@ -188,6 +205,8 @@ export class Geminigen implements INodeType {
                         maxWaitTime = 18 * 60 * 1000; // 18 minutes
                     } else if (model === 'grok-3') {
                         maxWaitTime = 5 * 60 * 1000; // 1 minute for grok (short)
+                    } else if (model.includes('seedance')) {
+                        maxWaitTime = 15 * 60 * 1000; // 15 minutes
                     } else {
                         maxWaitTime = 30 * 60 * 1000; // default 30 minutes
                     }
